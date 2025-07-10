@@ -1,0 +1,119 @@
+body {
+  max-width: 50em;
+  margin: auto;
+  padding: 0em;
+  font-family: 'Segoe UI', sans-serif;
+  line-height: 1.6;
+  background-color: #fff;
+  color: #222;
+}
+
+h1 {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.3em;
+}
+
+code {
+  background-color: #f4f4f4;
+  padding: 0em 0em;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+pre {
+  background-color: #f4f4f4;
+  padding: 1em;
+  overflow-x: auto;
+  border-radius: 6px;
+}
+
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 0em;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+body.dark-theme {
+  background-color: #1e1e1e;
+  color: #ddd;
+}
+
+body.dark-theme a {
+  color: #80bfff;
+}
+
+body.dark-theme code,
+body.dark-theme pre {
+  background-color: #2d2d2d;
+}
+
+body.dark-theme table,
+body.dark-theme th,
+body.dark-theme td {
+  border-color: #444;
+}
+
+#theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  padding: 0.5em 0.5em;
+  background-color: #eee;
+  color: #000;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-theme #theme-toggle {
+  background-color: #333;
+  color: #eee;
+  border-color: #444;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  padding: 0.5em 0.3em;
+  font-size: 0.65em;
+  border: 1px solid #ccc;
+  background-color: #ddd;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.copy-btn:hover {
+  opacity: 1;
+}
+
+body.dark-theme .copy-btn {
+  background-color: #444;
+  color: #eee;
+  border-color: #444;
+}

@@ -1,0 +1,89 @@
+README - Portable Markdown to HTML Note Builder
+===============================================
+
+This is a simple, portable template for writing notes in Markdown (.md)
+and converting them to clean HTML with custom CSS and LaTeX math support
+(using MathJax).
+
+----------------------------------------------------------------------
+REQUIREMENTS
+----------------------------------------------------------------------
+
+1. Python 3 must be installed.
+   - Test by running: python3 --version
+
+2. The 'markdown' Python package must be installed.
+   - Install via pip:
+     pip install markdown
+
+No other dependencies are required.
+
+----------------------------------------------------------------------
+FILES INCLUDED
+----------------------------------------------------------------------
+
+- notes.md         → Your main Markdown note file
+- template.html    → HTML template with placeholders for title and content
+- style.css        → Your custom styling for the output
+- build.py         → Python script that converts .md to .html
+- MyMarkdown.sublime-build → Build system for Sublime Text (optional)
+
+Output:
+- output.html      → The generated HTML file
+
+----------------------------------------------------------------------
+USAGE
+----------------------------------------------------------------------
+
+### OPTION A: Use Sublime Text (recommended)
+
+1. Open the folder in Sublime.
+2. Open notes.md.
+3. Go to: Tools → Build System → MyMarkdown.
+4. Press Ctrl+B (or Cmd+B on Mac).
+5. Your notes will be built to 'output.html' and optionally opened in your browser.
+
+### OPTION B: Use terminal (manual)
+
+1. Navigate to the folder.
+2. Run:
+   python3 build.py
+
+This will generate output.html in the same folder.
+
+----------------------------------------------------------------------
+NOTES ON MARKDOWN FEATURES
+----------------------------------------------------------------------
+
+- Regular Markdown formatting works: # Headings, lists, links, etc.
+- MathJax support is enabled:
+  Use \\( inline math \\) and \\[ display math \\]
+
+- YouTube videos can be embedded using iframe:
+  Example:
+
+  <iframe width="560" height="315"
+    src="https://www.youtube.com/embed/VIDEO_ID"
+    frameborder="0" allowfullscreen></iframe>
+
+----------------------------------------------------------------------
+TROUBLESHOOTING
+----------------------------------------------------------------------
+
+• If the build system fails with "python: command not found":
+  → Try changing the Sublime build file to use "python3" instead.
+
+• If Math doesn't render:
+  → Make sure to use \\( ... \\) or \\[ ... \\] (double backslashes).
+
+• If the iframe video doesn't show:
+  → Ensure you're using the embed URL format:
+     https://www.youtube.com/embed/VIDEO_ID                                                                                                     
+
+----------------------------------------------------------------------
+CONTACT / ATTRIBUTION
+----------------------------------------------------------------------
+
+Template designed for portability and simplicity.
+Feel free to customize or expand it.
+

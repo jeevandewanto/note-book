@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Notes</title>
+  <link rel="stylesheet" href="style.css">
+  <script async
+    id="MathJax-script"
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <h1 id="jeevans-notebook">Jeevan's Notebook</h1>
+<!-- MarkdownTOC autolink="true" levels="1"-->
+
+<ul>
+<li><a href="#bacteria-sim-mdpi">Bacteria sim (MDPI)</a></li>
+<li><a href="#predictor-corrector">Predictor-Corrector</a></li>
+<li><a href="#fem-time-stepping">FEM time stepping</a></li>
+<li><a href="#egg-spinning">Egg spinning</a></li>
+<li><a href="#misc">MISC</a></li>
+</ul>
+<!-- /MarkdownTOC -->
+
+<h1 id="bacteria-sim-mdpi">Bacteria sim (MDPI)</h1>
+<p>Relevant links:</p>
+<ul>
+<li><a href="http://www.mdpi.com/journal/powders/instructions">Instruction for authors</a></li>
+<li><a href="http://susy.mdpi.com">Submission portal</a> (choose the journal 'Powders')</li>
+</ul>
+<h2 id="general-outline">General outline</h2>
+<ul>
+<li>Intro: problem, purpose, limitations<ul>
+<li>Problem: micromechanical understanding of bacterial transport in porous medium</li>
+<li>Purpose: Demonstrate our physically accurate FEM-DEM method -&gt; extending the FEM-DEM application into bio-mechanical applications</li>
+<li>Limitations: highly simplified test case: non-motile bacteria</li>
+</ul>
+</li>
+<li>FEM-DEM Method, how it works?</li>
+<li>High fidelity simulation: the high accuracy details we can get from the method</li>
+<li>Extending the FEM-DEM application into bio-mechanical applications<ul>
+<li>The things we can add <em>while maintaining the accuracy</em> to our FEM-DEM, to extend it's application into the bio-mechanical cases. </li>
+</ul>
+</li>
+</ul>
+<h1 id="predictor-corrector">Predictor-Corrector</h1>
+<p><em>Project directory</em>: <code>/Users/jvn/MATLAB/0_bacteriaFlow</code></p>
+<h3 id="notes">Notes:</h3>
+<p>Predictor for fluid velocity:</p>
+<ul>
+<li>Using 'variable step-size leapfrog' from Gresho-Sani (see pg. 805-806)</li>
+<li>Weird stuffs???<ul>
+<li>Code is different with the formula in the book?</li>
+<li>Number of iterations is changing too much? is the predicted values wrong? Convergence only due to Newton-Raphson's iterations?</li>
+</ul>
+</li>
+</ul>
+<p>HG: Hilbert interpolation? HG is making the program as matlab does not have the hilbert function</p>
+<p>To do:</p>
+<ul>
+<li>Do time sequence plot. Investigate the change in values of the not-predicted and predicted. Which values does the NR uses for the initial value? Is it v(t) or v(d+t)?</li>
+<li>From 3 time steps and show the predicted value (u,v,p), before and after newton-raphson<ul>
+<li>mark the final value</li>
+</ul>
+</li>
+<li><strong>use porous flow with increasing velocity inflow for a test case</strong><ul>
+<li>low Re, complex flow profile</li>
+<li>we need some source of instability, otherwise it will be only a stationary flow</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Simulation setup" src="figs/SimGeomForPredictorInvestigation.png" /></p>
+<h3 id="predictor-corrector-logic">Predictor Corrector Logic:</h3>
+<p>'generalized leapfrog' for predictor, as recommended by Gresho-Sani:</p>
+<p>$$
+y^P_{n+1} = y_n + \left(1+\frac{\Delta t_n}{\Delta t_{n-1}}\right)\Delta t_n \dot{y}_n - \left(\frac{\Delta t_n}{\Delta t_{n-1}}\right)^2(y_n-y_{n-1})
+$$</p>
+<p><code>bdf2a_error.m</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="c">%  Predict the velocity via &#39;generalized leapfrog&#39;:</span>
+<span class="c">%  General Step, Step 1, Gresho-2000, p. 805. Eq.3.16-248</span>
+<span class="n">gPred</span><span class="p">(</span><span class="n">uIndx</span><span class="p">)</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">gOLD</span><span class="p">(</span><span class="n">uIndx</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="mi">1</span><span class="o">+</span><span class="n">dtRatio</span><span class="w"> </span><span class="p">)</span><span class="o">*</span><span class="n">dt</span><span class="o">*</span><span class="n">gDotOLD</span><span class="p">(</span><span class="n">uIndx</span><span class="p">)</span><span class="w"> </span><span class="k">...</span>
+<span class="w">           </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">dtRatio</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="w"> </span><span class="n">gOLD</span><span class="p">(</span><span class="n">uIndx</span><span class="p">)</span><span class="o">-</span><span class="n">gOLD2</span><span class="p">(</span><span class="n">uIndx</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="n">gPred</span><span class="p">(</span><span class="n">vIndx</span><span class="p">)</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">gOLD</span><span class="p">(</span><span class="n">vIndx</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dtRatio</span><span class="p">)</span><span class="o">*</span><span class="n">dt</span><span class="o">*</span><span class="n">gDotOLD</span><span class="p">(</span><span class="n">vIndx</span><span class="p">)</span><span class="w"> </span><span class="k">...</span>
+<span class="w">           </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">dtRatio</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="w"> </span><span class="n">gOLD</span><span class="p">(</span><span class="n">vIndx</span><span class="p">)</span><span class="o">-</span><span class="n">gOLD2</span><span class="p">(</span><span class="n">vIndx</span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="n">gPred</span><span class="p">(</span><span class="n">pIndx</span><span class="p">)</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">gOLD</span><span class="p">(</span><span class="n">pIndx</span><span class="p">);</span>
+<span class="n">gPred_output</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">gPred</span><span class="p">;</span>
+</code></pre></div>
+
+<p><code>gPred</code> is now used as input for:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">[</span><span class="n">a</span><span class="p">,</span><span class="n">ascaled</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">iter</span><span class="p">,</span><span class="n">hasError</span><span class="p">,</span><span class="n">res</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newtonbdf2a</span><span class="p">(</span><span class="n">area</span><span class="p">,</span><span class="n">eqn</span><span class="p">,</span><span class="n">gPred</span><span class="p">,</span><span class="n">gOLD</span><span class="p">,...</span>
+<span class="w">  </span><span class="n">gOLD2</span><span class="p">,</span><span class="n">dt</span><span class="p">,</span><span class="n">dtRatio</span><span class="p">,</span><span class="n">indx</span><span class="p">,</span><span class="n">nelem</span><span class="p">,</span><span class="n">neqn</span><span class="p">,</span><span class="n">node</span><span class="p">,</span><span class="n">np</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">region</span><span class="p">,</span><span class="n">nParticle</span><span class="p">,</span><span class="n">PX</span><span class="p">,</span><span class="n">PY</span><span class="p">,</span><span class="n">VF</span><span class="p">,</span><span class="n">VX</span><span class="p">,...</span>
+<span class="w">  </span><span class="n">VY</span><span class="p">,</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">,</span><span class="n">owner</span><span class="p">,</span><span class="n">it</span><span class="p">);</span>
+</code></pre></div>
+
+<p><code>bdf2a_error.m</code> is located in the main driver, under the corrector-step comment (why???):</p>
+<div class="codehilite"><pre><span></span><code><span class="c">%% First corrector-step</span>
+<span class="w">    </span><span class="c">% Non-stationary solution via BDF2</span>
+<span class="w">    </span><span class="p">[</span><span class="n">g</span><span class="p">,</span><span class="n">iter</span><span class="p">,</span><span class="n">dtNew</span><span class="p">,</span><span class="n">hasError</span><span class="p">,</span><span class="n">Cnum</span><span class="p">,</span><span class="n">CnumScale</span><span class="p">,</span><span class="o">~</span><span class="p">,</span><span class="n">res</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">bdf2a_error</span><span class="p">(</span><span class="n">gOLD</span><span class="p">,</span><span class="n">gOLD2</span><span class="p">,</span><span class="n">gOLD3</span><span class="p">,</span><span class="n">nelem</span><span class="p">,</span><span class="n">neqn</span><span class="p">,</span><span class="n">indx</span><span class="p">,</span><span class="n">npWOMid</span><span class="p">,</span><span class="n">dt</span><span class="p">,</span><span class="n">dtOld</span><span class="p">,</span><span class="k">...</span>
+<span class="w">        </span><span class="n">it</span><span class="p">,</span><span class="n">node</span><span class="p">,</span><span class="n">np</span><span class="p">,</span><span class="nb">area</span><span class="p">,</span><span class="n">eqn</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">region</span><span class="p">,</span><span class="n">particleNum</span><span class="p">,</span><span class="n">PX</span><span class="p">,</span><span class="n">PY</span><span class="p">,</span><span class="n">VF</span><span class="p">,</span><span class="n">VX</span><span class="p">,</span><span class="n">VY</span><span class="p">,</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">,</span><span class="n">owner</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c">% Getting the solutions (velocities and pressures) out of G as U, V, P</span>
+<span class="w">    </span><span class="p">[</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">p</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">evaluateG</span><span class="p">(</span><span class="n">np</span><span class="p">,</span><span class="n">node</span><span class="p">,</span><span class="n">nelem</span><span class="p">,</span><span class="n">indx</span><span class="p">,</span><span class="n">g</span><span class="p">);</span>
+</code></pre></div>
+
+<ul>
+<li>initial <code>g</code> is the stationary solution, immediately broken down to <code>u</code>,<code>v</code>,<code>p</code> and copied as <code>uOLD</code>, <code>vOLD</code>, and <code>pOLD</code></li>
+<li><code>uOLD</code>, <code>vOLD</code>, and <code>pOLD</code> interpolated into <code>gOLD</code>. That's the end of the <em>Predictor</em> step.</li>
+<li>Which makes:<ul>
+<li><code>g</code> is \(g_{n+1}\)</li>
+<li><code>gOLD</code> is \(g_{n}\)</li>
+<li><code>gOLD2</code> is \(g_{n-1}\)</li>
+<li><code>gOLD3</code> is \(g_{n-2}\)</li>
+</ul>
+</li>
+<li>In the <em>Corrector</em>, <code>gOLD</code>,<code>gOLD2</code>,<code>gOLD3</code> is the input for <code>bdf2a_error.m</code></li>
+</ul>
+<h4 id="monitoring-the-predictor">Monitoring the predictor:</h4>
+<ul>
+<li>Store <code>gOLD</code>,<code>gOLD2</code>,<code>gOLD3</code> for every time step. <code>g</code> is not needed as it should be the same as <code>gOLD</code> (check pls!)<ul>
+<li>We should get a 'stack' of three layers every time step, converging to the predicted <code>g</code> (or <code>gPred</code>?)</li>
+</ul>
+</li>
+<li><code>interpolationPrepare.m</code> interpolates every <code>gOLD</code>s into the current, step-n, mesh. So, <code>gOLD</code>s are all on the same mesh  </li>
+</ul>
+<p>Location of the monitor: main driver, right after <code>bdf2a_error</code>. <code>gPred</code> is already fixed by the Newton-Raphson within <code>bdf2a_error</code> -&gt; new var added <code>gPredRaw</code></p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="n">monitorPredictor</span>
+<span class="w">    </span><span class="c">% disassemble g to it&#39;s component</span>
+<span class="w">    </span><span class="p">[</span><span class="n">uOLD_monitor</span><span class="p">,</span><span class="n">vOLD_monitor</span><span class="p">,</span><span class="n">pOLD_monitor</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">evaluateG</span><span class="p">(</span><span class="n">np</span><span class="p">,</span><span class="n">node</span><span class="p">,</span><span class="n">nelem</span><span class="p">,</span><span class="n">indx</span><span class="p">,</span><span class="n">gOLD</span><span class="p">);</span>
+<span class="w">    </span><span class="p">[</span><span class="n">uOLD2_monitor</span><span class="p">,</span><span class="n">vOLD2_monitor</span><span class="p">,</span><span class="n">pOLD2_monitor</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">evaluateG</span><span class="p">(</span><span class="n">np</span><span class="p">,</span><span class="n">node</span><span class="p">,</span><span class="n">nelem</span><span class="p">,</span><span class="n">indx</span><span class="p">,</span><span class="n">gOLD2</span><span class="p">);</span>
+<span class="w">    </span><span class="p">[</span><span class="n">uOLD3_monitor</span><span class="p">,</span><span class="n">vOLD3_monitor</span><span class="p">,</span><span class="n">pOLD3_monitor</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">evaluateG</span><span class="p">(</span><span class="n">np</span><span class="p">,</span><span class="n">node</span><span class="p">,</span><span class="n">nelem</span><span class="p">,</span><span class="n">indx</span><span class="p">,</span><span class="n">gOLD3</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c">% plot</span>
+<span class="w">    </span><span class="nb">figure</span><span class="p">(</span><span class="mi">79</span><span class="p">);</span><span class="w"> </span><span class="nb">clf</span><span class="p">;</span><span class="w"> </span><span class="n">hold</span><span class="w"> </span><span class="s">on</span><span class="p">;</span><span class="w"> </span><span class="c">% pressure</span>
+<span class="w">    </span><span class="n">hOLD</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">trisurf</span><span class="p">(</span><span class="n">delTriOutside</span><span class="p">.</span><span class="n">ConnectivityList</span><span class="p">,</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">,</span><span class="n">pOLD_monitor</span><span class="p">,</span><span class="n">pOLD_monitor</span><span class="p">);</span>
+<span class="w">    </span><span class="nb">plot3</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">,</span><span class="n">pOLD2_monitor</span><span class="p">,</span><span class="s">&#39;ob&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="nb">plot3</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">,</span><span class="n">pOLD3_monitor</span><span class="p">,</span><span class="s">&#39;xr&#39;</span><span class="p">);</span>
+<span class="c">%             hOLD2 = trisurf(delTriOutside.ConnectivityList,xc,yc,pOLD2_monitor,pOLD2_monitor);</span>
+<span class="c">%             hOLD3 = trisurf(delTriOutside.ConnectivityList,xc,yc,pOLD3_monitor,pOLD3_monitor);</span>
+
+<span class="w">    </span><span class="n">hOLD</span><span class="p">.</span><span class="n">FaceAlpha</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.4</span><span class="p">;</span>
+<span class="w">    </span><span class="nb">pbaspect</span><span class="p">([</span><span class="mi">6</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mf">0.5</span><span class="p">]);</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="s">tight</span><span class="p">;</span><span class="w"> </span><span class="nb">view</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="w">    </span><span class="nb">legend</span><span class="p">(</span><span class="s">&#39;gOLD (g_n)&#39;</span><span class="p">,</span><span class="s">&#39;gOLD2 (g_{n-1})&#39;</span><span class="p">,</span><span class="s">&#39;gOLD3 (g_{n-2})&#39;</span><span class="p">,</span><span class="s">&#39;location&#39;</span><span class="p">,</span><span class="s">&#39;southoutside&#39;</span><span class="p">,</span><span class="s">&#39;orientation&#39;</span><span class="p">,</span><span class="s">&#39;horizontal&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nb">set</span><span class="p">(</span><span class="nb">gca</span><span class="p">,</span><span class="s">&#39;fontsize&#39;</span><span class="p">,</span><span class="mi">16</span><span class="p">)</span>
+<span class="k">end</span>
+</code></pre></div>
+
+<p><img alt="Predictor value" src="figs/predictorEval.png" />
+<a href="vids/PredictorEval-zoomLargedt2.mp4">Predictor value vid</a></p>
+<h3 id="bc-setup">BC setup</h3>
+<div class="codehilite"><pre><span></span><code>if t &lt; 0.001
+    inflowPeakVelo = 0.001; % 2x the width of the channel
+else
+    inflowPeakVelo = 0.001+(t-0.001)*(1/111); % should end with 10x initial peak velocity at t = 1 s
+end
+</code></pre></div>
+
+<h1 id="fem-time-stepping">FEM time stepping</h1>
+<h2 id="fem-element-size-dependent-time-step-size-limit-for-fluid">FEM element-size dependent time step size limit for fluid</h2>
+<p><em>discussion with Jan, 06/07/2025</em></p>
+<p>Idea: particle should not move faster than one element size in a single time step.</p>
+<p>We can do rough estimation of the particle velocity and estimate the time step limit. For example, limiting at max half an element per timestep.</p>
+<p>$$
+\Delta t_{max,fluid} = 0.5 \frac{l_{mesh}}{u_{particle}}
+$$</p>
+<p>HG:</p>
+<ul>
+<li>Adaptive time step size based on mesh size/quality might not be necessary, the new relaxation might be able to do large displacement of FEM nodes.</li>
+</ul>
+<h3 id="to-do">To do:</h3>
+<ul>
+<li>harass Shintani and Yamashita for the new relaxation<ul>
+<li>How large can the displacement of nodes be?</li>
+<li>How does it react with fast moving particles (more than 1 element size per timestep?)?</li>
+</ul>
+</li>
+</ul>
+<h1 id="egg-spinning">Egg spinning</h1>
+<h2 id="camera-for-egg-spinning-experiment">Camera for egg-spinning experiment</h2>
+<p>Issue: light reflection on the egg</p>
+<p>Use <a href="https://en.wikipedia.org/wiki/Polarizing_filter_(photography)">polarizing filters</a>.</p>
+<p>Buy standard CPL filters? check dimension:</p>
+<ul>
+<li>Measured diameter using caliper: 48 mm (inside dimension, including the threading, maybe it is 49 mm?)</li>
+<li>Info online: the lens are not the typical consumer camera lens<ul>
+<li>C-mount</li>
+<li>Different front filter thread spec notation (e.g. M55 (P=0.75) -&gt; diameter is 55 and 0.75 pitch for the threading)</li>
+</ul>
+</li>
+</ul>
+<h3 id="to-do_1">To do:</h3>
+<ul>
+<li>Faheema recheck dimension, do we have specification sheet of the lens? Check the diameter and the threading. Is the standard thread pitch also 0.75?</li>
+<li>Maybe discuss with Jan?</li>
+</ul>
+<h1 id="misc">MISC</h1>
+<p>Clothing size:
+Waki: L (Uniqlo)
+Yamashita: </p>
+</body>
+</html>
