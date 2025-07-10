@@ -2,7 +2,7 @@ import markdown
 from pathlib import Path
 
 markdown_file = Path("notes.md")
-html_file = Path("notes.html")
+html_file = Path("index.html")
 template_file = Path("template.html")
 title = "My Notes"
 
